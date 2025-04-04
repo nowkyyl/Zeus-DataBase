@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "ZeusForge",
+	"name": "zeusforje",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-04-04",
 	"observability": {
