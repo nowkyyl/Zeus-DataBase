@@ -5,6 +5,7 @@ export interface Env {
 export class ZeusForge implements DurableObject {
 	state: DurableObjectState;
 	storage: DurableObjectStorage;
+	private KEY: string = "7e918522deaf4d4886122e30d09cb7b1";
 
 	constructor(state: DurableObjectState, env: Env) {
 		this.state = state;
@@ -14,6 +15,11 @@ export class ZeusForge implements DurableObject {
 	async fetch(request: Request): Promise<Response> {
 		const { pathname, searchParams } = new URL(request.url);
 		const method = request.method;
+
+		const requestKey = request.headers.get("Authorization");
+		if (!requestKey || requestKey !== `ZeusForje ${this.KEY}`) {
+			return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+		};
 
 		if (request.method == "POST" && pathname == "/add") {
 			const body = await request.json() as { userId: string; value: number };
