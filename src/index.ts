@@ -19,7 +19,12 @@ export class ZeusForge implements DurableObject {
 		const requestKey = request.headers.get("Authorization");
 		if (!requestKey || requestKey !== this.KEY) {
 			return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-		};
+		}
+
+		const gameName = searchParams.get("gameName");
+		if (!gameName) {
+			return new Response(JSON.stringify({ error: "Missing game name"}), { status: 400 });
+		}
 
 		if (request.method == "POST" && pathname == "/add") {
 			const bodyText = await request.text();
@@ -30,7 +35,7 @@ export class ZeusForge implements DurableObject {
 			} catch (e) {
 				return new Response("Invalid JSON", { status: 400 });
 			}
-			
+
 			const userId = body.userId;
 			if (!userId || typeof userId !== "string") {
 				return new Response("Invalid userId", { status: 400 });
@@ -39,7 +44,11 @@ export class ZeusForge implements DurableObject {
 			delete body.userId;
 
 			const playerData = (await this.storage.get<Record<string, any>>("playerData")) || {};
-			playerData[userId] = { ...(playerData[userId] || {}), ...body };
+			if (!playerData[gameName]) {
+				playerData[gameName] = {};
+			}
+
+			playerData[gameName][userId] = { ...(playerData[gameName][userId] || {}), ...body };
 
 			await this.storage.put("playerData", playerData);
 
@@ -52,18 +61,22 @@ export class ZeusForge implements DurableObject {
 			const userId = searchParams.get("userId");
 			const playerData = (await this.storage.get<Record<string, any>>("playerData")) || {};
 
+			if (!playerData[gameName]) {
+				return new Response(JSON.stringify({ error: "Game not found" }), { status: 404 });
+			}
+
 			if (userId) {
-				return new Response(JSON.stringify(playerData[userId] || {}), {
+				return new Response(JSON.stringify(playerData[gameName][userId] || {}), {
 					headers: { "Content-Type": "application/json" },
 				})
 			}
 
-			return new Response(JSON.stringify(playerData), {
+			return new Response(JSON.stringify(playerData[gameName]), {
 				headers: { "Content-Type": "application/json" },
 			});
 		}
 
-		// Return a default response for unhandled cases
+		// Return a default response for unhandled
 		return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
 	}
 }
