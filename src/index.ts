@@ -22,13 +22,26 @@ export class ZeusForge implements DurableObject {
 		};
 
 		if (request.method == "POST" && pathname == "/add") {
-			const body = await request.json() as { userId: string; value: number };
-			if (!body.userId || body.value == undefined) {
-				return new Response("Invalid request", { status: 400 });
-			};
+			const bodyText = await request.text();
+			let body;
+
+			try	{
+				body = JSON.parse(bodyText);
+			} catch (e) {
+				return new Response("Invalid JSON", { status: 400 });
+			}
 			
-			const playerData = (await this.storage.get<Record<string, number>>("playerData")) || {};
-			playerData[body.userId] = body.value;
+			const userId = body.userId;
+			if (!userId || typeof userId !== "string") {
+				return new Response("Invalid userId", { status: 400 });
+			}
+
+			delete body.userId;
+
+			const playerData = (await this.storage.get<Record<string, any>>("playerData")) || {};
+			playerData[userId] = { ...(playerData[userId] || {}), ...body };
+
+			await this.storage.put("playerData", playerData);
 
 			return new Response(JSON.stringify({ success: true }), {
 				headers: { "Content-Type": "application/json" },
@@ -37,12 +50,12 @@ export class ZeusForge implements DurableObject {
 
 		if (method == "GET" && pathname == "/get") {
 			const userId = searchParams.get("userId");
-			const playerData = (await this.storage.get<Record<string, number>>("playerData")) || {};
+			const playerData = (await this.storage.get<Record<string, any>>("playerData")) || {};
 
 			if (userId) {
-				return new Response(JSON.stringify({ userId, value: playerData[userId] || null }), {
+				return new Response(JSON.stringify(playerData[userId] || {}), {
 					headers: { "Content-Type": "application/json" },
-				});
+				})
 			}
 
 			return new Response(JSON.stringify(playerData), {
@@ -51,7 +64,7 @@ export class ZeusForge implements DurableObject {
 		}
 
 		// Return a default response for unhandled cases
-		return new Response("Not Found", { status: 404 });
+		return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
 	}
 }
 
