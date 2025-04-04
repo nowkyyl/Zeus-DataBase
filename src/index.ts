@@ -5,7 +5,7 @@ export interface Env {
 export class ZeusForge implements DurableObject {
 	state: DurableObjectState;
 	storage: DurableObjectStorage;
-	private KEY: string = "7e918522deaf4d4886122e30d09cb7b1";
+	private KEY: string = "ZeusForge7e918522deaf4d4886122e30d09cb7b1";
 
 	constructor(state: DurableObjectState, env: Env) {
 		this.state = state;
@@ -17,7 +17,7 @@ export class ZeusForge implements DurableObject {
 		const method = request.method;
 
 		const requestKey = request.headers.get("Authorization");
-		if (!requestKey || requestKey !== `ZeusForje ${this.KEY}`) {
+		if (!requestKey || requestKey !== this.KEY) {
 			return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
 		};
 
