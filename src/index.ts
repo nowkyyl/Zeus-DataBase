@@ -5,7 +5,7 @@ export interface Env {
 export class ZeusForge implements DurableObject {
 	state: DurableObjectState;
 	storage: DurableObjectStorage;
-	private KEY: string = "ZeusForge7e918522deaf4d4886122e30d09cb7b1";
+	private KEY: string = "";
 
 	constructor(state: DurableObjectState, env: Env) {
 		this.state = state;
